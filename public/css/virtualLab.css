@@ -1,0 +1,62 @@
+.virtualLab_text{
+    background-color: #cadbc2;
+    padding: 2rem;
+}
+
+.virtuallab_container {
+  display: flex;
+  flex-direction: row;
+  font-size: 1.5rem;
+}
+
+.virtuallab_container .item-left {
+  padding: 2rem;
+  margin-left: 5%;
+  margin-top: auto;
+  margin-bottom: auto;
+  flex: 50%;
+
+}
+.virtuallab_container .item-left a{
+    color: #367D43;
+    text-decoration: none;
+}
+
+.virtuallab_container .item-right {
+  padding: 10px;
+  flex: 50%;
+}
+
+.item-right img{
+    max-width: 100%;
+    max-height: 100%;
+    display: block; /* remove extra space below image */
+}
+
+
+@media only screen and (max-width: 867px) {
+  .virtuallab_container {
+        flex-direction: column;
+    }
+
+}
+@media only screen and (max-width: 475px) {
+  .virtuallab_container {
+        font-size: 0.9rem;
+    }
+}
+
+.virtualLab_loging_btn{
+    box-shadow: 5px 5px 10px -3px rgba(135, 135, 138, 1);
+    border: none;
+    font-size: large;
+    font-weight: 600;
+    color: #cadbc2;
+    padding: 1.5rem;
+    padding-left: 3rem;
+    padding-right: 3rem;
+    margin: 5rem;
+    margin-left: 7%;
+    background-color: rgb(54 125 67);
+    border-radius: 5px;
+}

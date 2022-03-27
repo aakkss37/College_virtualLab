@@ -50,6 +50,11 @@ app.get('/home/:departmantName', (req, resp) => {
 
 })
 
+
+app.get('/virtuallab', (req, resp) => {
+    resp.render('virtualLab')
+})
+
 app.listen(3000, () => {
     console.log('Server Running On PORT 3000')
 })
