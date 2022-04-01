@@ -65,6 +65,9 @@ app.get('/student_login', (req, resp) => {
 app.get('/compose', (req, resp) => {
     resp.render('compose')
 })
+app.get('/admin-login', (req, resp) => {
+    resp.render('admin-login')
+})
 
 
 app.listen(3000, () => {

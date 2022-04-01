@@ -103,7 +103,7 @@
   justify-content: space-between;
   align-items: center;
 }
-.box-form .right .remember-me--forget-password input {
+.box-form .right .remember-me input {
   margin: 0;
   margin-right: 7px;
   width: auto;
@@ -119,14 +119,17 @@
   outline: 0;
   background-color: #367D43;
 }
+.box-form .right button:hover{
+  cursor: pointer;
+}
 
-label {
+/* label {
   display: block;
   position: relative;
   margin-left: 30px;
-}
+} */
 
-label::before {
+/* label::before {
   content: ' \f00c';
   position: absolute;
   font-family: FontAwesome;
@@ -136,15 +139,15 @@ label::before {
   color: transparent;
   left: -30px;
   transition: all 0.2s linear;
-}
+} */
 
-label:hover::before {
+/* label:hover::before {
   font-family: FontAwesome;
   content: ' \f00c';
   color: #fff;
   cursor: pointer;
   background: #367D43;
-}
+} */
 
 label:hover::before .text-checkbox {
   background: #367D43;
@@ -158,6 +161,6 @@ label span.text-checkbox {
   transition: all 0.2s linear;
 }
 
-label input[type="checkbox"] {
+/* label input[type="checkbox"] {
   display: none;
-}
+} */
