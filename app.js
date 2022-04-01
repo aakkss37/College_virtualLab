@@ -7,6 +7,7 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
+// ! Student Side
 
 app.get('/home', (req, resp) => {
     resp.render('home')
@@ -50,10 +51,21 @@ app.get('/home/:departmantName', (req, resp) => {
 
 })
 
-
 app.get('/virtuallab', (req, resp) => {
     resp.render('virtualLab')
 })
+
+app.get('/student_login', (req, resp) => {
+    resp.render('student_login')
+})
+
+
+// ! Admin Side
+
+app.get('/compose', (req, resp) => {
+    resp.render('compose')
+})
+
 
 app.listen(3000, () => {
     console.log('Server Running On PORT 3000')
