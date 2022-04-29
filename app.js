@@ -26,7 +26,7 @@ const practicalSchema = {
     discreption: String,
     quillData: Object,
 }
-// const PracticlesSchema = mongoose.model('PracticlesSchema', practicalSchema)
+
 const Biotechnogoly = mongoose.model('Biotechnogoly', practicalSchema)
 const Physics = mongoose.model('Physics', practicalSchema)
 const Cybersecurity = mongoose.model('Cybersecurity', practicalSchema)
@@ -340,74 +340,62 @@ app.get('/home/:DepartmentName/:year/:practical_Id', async (req, resp) => {
     console.log(practical_Id)
     if (departmantName === 'Biotechnogoly') {
         try {
-            await Biotechnogoly.findOne({ _id: practical_Id, year: student_year }, (err, foundItem) => {
+            const foundItem = await Biotechnogoly.findOne({ _id: practical_Id})
                 resp.render('client/practical', {
                     data: foundItem.quillData,
                     title: foundItem.title
                 })
-            })
-
         } catch (err) {
             console.log(err);
         }
     } else if (departmantName === 'Physics') {
         try {
-            await Physics.findOne({ _id: practical_Id }, (err, foundItem) => {
+            const foundItem = await Physics.findOne({ _id: practical_Id })
                 resp.render('client/practical', {
                     data: foundItem.quillData,
                     title: foundItem.title
                 })
-            })
-
         } catch (err) {
             console.log(err);
         }
     } else if (departmantName === 'Cybersecurity') {
         try {
-            await Cybersecurity.findOne({ _id: practical_Id }, (err, foundItem) => {
+            const foundItem = await Cybersecurity.findOne({ _id: practical_Id })
                 resp.render('client/practical', {
                     data: foundItem.quillData,
                     title: foundItem.title
                 })
-            })
-
         } catch (err) {
             console.log(err);
         }
     } else if (departmantName === 'Computer Science') {
         try {
-            await Computer_Science.findOne({ _id: practical_Id }, (err, foundItem) => {
+            const foundItem = await Computer_Science.findOne({ _id: practical_Id })
                 resp.render('client/practical', {
                     data: foundItem.quillData,
                     title: foundItem.title
                 })
-            })
-
         } catch (err) {
             console.log(err);
         }
     } else if (departmantName === 'Chemistry') {
         try {
-            await Chemistry.findOne({ _id: practical_Id }, (err, foundItem) => {
+            const foundItem = await Chemistry.findOne({ _id: practical_Id })
                 resp.render('client/practical', {
                     data: foundItem.quillData,
                     title: foundItem.title
                 })
-            })
-
         } catch (err) {
             console.log(err);
         }
     }
     else if (departmantName === 'Mathematics') {
         try {
-            await Mathematics.findOne({ _id: practical_Id }, (err, foundItem) => {
+            const foundItem = await Mathematics.findOne({ _id: practical_Id })
                 resp.render('client/practical', {
                     data: foundItem.quillData,
                     title: foundItem.title
                 })
-            })
-
         } catch (err) {
             console.log(err);
         }
