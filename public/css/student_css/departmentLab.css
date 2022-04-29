@@ -1,0 +1,40 @@
+.departmentLab_container {
+    padding: 3rem;
+    padding-left: 10%;
+    padding-right: 10%;
+    min-height: 800px;
+    overflow: auto;
+
+}
+
+.departmentLab_container h1 {
+    text-align: center;
+    font-size: 3rem;
+    color: #367D43;
+}
+
+.departmentLab_container h2 {
+    display: inline;
+    font-size: 2rem;
+    color: #828282;
+}
+
+.departmentLab_container h2:hover {
+    cursor: pointer;
+    text-decoration: underline;
+    color: #367D43;
+}
+
+@media only screen and (max-width: 767px) {
+    .departmentLab_container h1 {
+        font-size: 2rem;
+    }
+
+    .departmentLab_container h2 {
+        text-align: center;
+    }
+
+    .departmentLab_container p {
+        text-align: justify;
+    }
+}

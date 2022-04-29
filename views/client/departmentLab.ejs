@@ -1,0 +1,30 @@
+<%- include("partials/header"); -%>
+
+
+    
+
+    <div class="departmentLab_container" style="max-width: 1000px; margin: auto;">
+
+        <h1>
+            <%= DepartmentName %>
+        </h1>
+        <br>
+        <br>
+        <% foundItems.forEach((element) => { %>
+            <h2 onclick="window.location.href='/home/<%=DepartmentName%>/<%= element.year %>/<%=element._id%>'"><%= element.title %></h2>
+            <p><%= element.discreption %></p>
+            <br>
+            <br>
+        <% }); %>
+        
+    </div>
+
+
+
+    <%- include("partials/footer"); -%>
+
+
+
+
+
+ 
