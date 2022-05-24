@@ -19,13 +19,13 @@ app.use(bodyParser.json())
 
 mongoose.connect("mongodb+srv://admin:admin123@cluster0.khkmp.mongodb.net/karpagam_virtual_lab", { useUnifiedTopology: true, useNewUrlParser: true })
 
-const practicalSchema = new mongoose.schema({
+const practicalSchema = {
     department: String,
     year: String,
     title: String,
     discreption: String,
     quillData: Object,
-});
+};
 
 const Biotechnogoly = mongoose.model('Biotechnogoly', practicalSchema)
 const Physics = mongoose.model('Physics', practicalSchema)
@@ -415,6 +415,12 @@ app.get('/home/:DepartmentName/:year/:practical_Id', async (req, resp) => {
 
 app.get('/super-admin/login', (req, resp) => {
     resp.render('admin/super-admin-login')
+})
+app.get('/create-admin', (req, resp)=>{
+    resp.render('admin/new-admin')
+})
+app.post('/create-admin', (req, resp)=>{
+    console.log('working')
 })
 app.get('/super-admin/create-new', (req, resp)=>{
     resp.send("<h1>This is super admin page to create new admin/facality id.</h1>")
