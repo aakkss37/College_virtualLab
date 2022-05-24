@@ -19,13 +19,13 @@ app.use(bodyParser.json())
 
 mongoose.connect("mongodb+srv://admin:admin123@cluster0.khkmp.mongodb.net/karpagam_virtual_lab", { useUnifiedTopology: true, useNewUrlParser: true })
 
-const practicalSchema = {
+const practicalSchema = new mongoose.schema({
     department: String,
     year: String,
     title: String,
     discreption: String,
     quillData: Object,
-}
+});
 
 const Biotechnogoly = mongoose.model('Biotechnogoly', practicalSchema)
 const Physics = mongoose.model('Physics', practicalSchema)
@@ -60,9 +60,6 @@ app.get('/virtuallab', (req, resp) => {
     resp.render('client/virtualLab')
 })
 
-app.get('/student_login', (req, resp) => {
-    resp.render('client/student_login')
-})
 app.get('/home/about', (req, resp)=>{
     resp.render('client/about')
 })
@@ -406,7 +403,6 @@ app.get('/home/:DepartmentName/:year/:practical_Id', async (req, resp) => {
 
 
 
-
 // ! *************************************************** //
 // ! *************************************************** //
 // ! *************************************************** //
@@ -415,8 +411,25 @@ app.get('/home/:DepartmentName/:year/:practical_Id', async (req, resp) => {
 // ! *************************************************** //
 // ! *************************************************** //
 
+//  **********SUPER ADMIN***********  //
 
+app.get('/super-admin/login', (req, resp) => {
+    resp.render('admin/super-admin-login')
+})
+app.get('/super-admin/create-new', (req, resp)=>{
+    resp.send("<h1>This is super admin page to create new admin/facality id.</h1>")
+})
+app.get('/super-admin/admin-list', (req, resp)=>{
+    resp.send("<h1>This is admin list page.</h1>")
+})
 
+// ! *************************************************** //
+// ! *************************************************** //
+// ! *************************************************** //
+// ! *************************************************** //
+// ! *************************************************** //
+// ! *************************************************** //
+// ! *************************************************** //
 
 //  **********ADMIN SIDE***********  //
 

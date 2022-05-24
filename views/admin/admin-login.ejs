@@ -1,37 +1,56 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <title>Admin Login</title>
-
-    <link rel="stylesheet" href="/css/admin_css/admin-login.css">
-
-</head>
-
-<body>
+<%- include("partials/header"); -%>
 
 
-    <!-- partial:index.partial.html -->
-    <form action="/admin-login" method="practical">
-        <img src="\images\KAHE_logo.png" alt="" srcset="">
-        <br><br>
+    <div class="box-form">
+        <div class="left">
+            <div class="overlay">
+                <img src="images\studentLogin\studentlogin.svg" alt="KAHE" srcset="">
+                <span>
+                    <h2>
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+                        sed do eiusmod tempor incididunt ut labore et
+                        dolore magna
+                        aliqua.
+                    </h2>
+                </span>
 
-        <div class="form-field">
-            <input type="email" placeholder="Email / Username" required />
+            </div>
         </div>
 
-        <div class="form-field">
-            <input type="password" placeholder="Password" required />
+
+
+        <div class="right">
+            <h5>Login</h5>
+            <p>To login into the virtual lab, Please login with your college email id.</p>
+            <form action="" method="practical">
+                <div class="inputs">
+                    <input type="email" placeholder="XXabcXXX@kahedu.edu.in">
+                    <br>
+                    <input type="password" placeholder="password">
+                </div>
+
+                <br><br>
+
+                <div class="remember-me">
+                    <!-- Angular -->
+                    <label>
+                        <input type="checkbox" name="item">
+                        <span class="text-checkbox">Remember me</span>
+                    </label>
+                </div>
+
+                <br>
+                <button type="submit">Login</button>
+            </form>
         </div>
 
-        <div class="form-field">
-            <button class="btn" type="submit">Log in</button>
-        </div>
-    </form>
-    <!-- partial -->
+    </div>
 
 
-</body>
 
-</html>
+
+
+
+
+
+    <%- include("partials/footer"); -%>
