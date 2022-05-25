@@ -2,8 +2,9 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const ejs = require("ejs");
 const mongoose = require('mongoose')
-const _ = require('lodash')
-const res = require('express/lib/response');
+const session = require('express-session')
+const passport = require('passport')
+const passportLocalMongoose = require('passport-local-mongoose')
 
 
 const app = express();
@@ -11,11 +12,17 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(bodyParser.json())
+app.use(session({
+    secret: 'This_is_a_little_secret_of_karpagam_academy_of_higher_education',
+    resave: false,
+    saveUninitialized: false,
+}))
+app.use(passport.initialize());
+app.use(passport.session());
 
-
-
-
-
+//*==============================================================*//
+//  **********MONGOOSE CONNECTION, SCHEMA AND PLUGIN************  //
+//*==============================================================*//
 
 mongoose.connect("mongodb+srv://admin:admin123@cluster0.khkmp.mongodb.net/karpagam_virtual_lab", { useUnifiedTopology: true, useNewUrlParser: true })
 
@@ -26,7 +33,6 @@ const practicalSchema = {
     discreption: String,
     quillData: Object,
 };
-
 const Biotechnogoly = mongoose.model('Biotechnogoly', practicalSchema)
 const Physics = mongoose.model('Physics', practicalSchema)
 const Cybersecurity = mongoose.model('Cybersecurity', practicalSchema)
@@ -35,7 +41,19 @@ const Chemistry = mongoose.model('Chemistry', practicalSchema)
 const Mathematics = mongoose.model('Mathematics', practicalSchema)
 
 
+const adminSchema = new mongoose.Schema({
+    name: String,
+    department: String,
+    adminID: String,
+    password: String
+})
+adminSchema.plugin(passportLocalMongoose)
 
+const Admin = mongoose.model('Admin', adminSchema)
+
+passport.use(User.createStrategy());
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 
 // ! *************************************************** //
@@ -49,8 +67,10 @@ const Mathematics = mongoose.model('Mathematics', practicalSchema)
 
 
 
-
+//*===================================*//
 //  **********CLIENT SIDE************  //
+//*===================================*//
+
 
 app.get('/home', (req, resp) => {
     resp.render('client/home')
@@ -65,8 +85,10 @@ app.get('/home/about', (req, resp)=>{
 })
 
 
-
+//============================================================================//
 // FETCHING DATA FROM DATABASE AND SHOWING EACH DEPARTMENT AND YEAR SEPARATELY
+//============================================================================//
+
 
 app.get('/home/virtual-lab/biotechnology/:year', async (req, resp) => {
 
@@ -325,8 +347,10 @@ app.get('/home/virtual-lab/chemistry/:year', async (req, resp) => {
 
 
 
-
+//=============================================//
 // GETTING PERTICULAR PRACTICAL BY SEARCHING ID.
+//=============================================//
+
 app.get('/home/:DepartmentName/:year/:practical_Id', async (req, resp) => {
 
     let departmantName = req.params.DepartmentName
@@ -411,20 +435,30 @@ app.get('/home/:DepartmentName/:year/:practical_Id', async (req, resp) => {
 // ! *************************************************** //
 // ! *************************************************** //
 
-//  **********SUPER ADMIN***********  //
+//*===================================*//
+//  **********SUPER ADMIN************  //
+//*===================================*//
 
 app.get('/super-admin/login', (req, resp) => {
-    resp.render('admin/super-admin-login')
+    resp.render('superAdmin/super-admin-login')
 })
-app.get('/create-admin', (req, resp)=>{
-    resp.render('admin/new-admin')
+app.get('/super-admin/create-admin', (req, resp)=>{
+    resp.render('superAdmin/new-admin')
 })
+
 app.post('/create-admin', (req, resp)=>{
     console.log('working')
+
 })
-app.get('/super-admin/create-new', (req, resp)=>{
-    resp.send("<h1>This is super admin page to create new admin/facality id.</h1>")
+
+app.get('/super-admin/admin-list', (req, resp) => {
+    // resp.render('superAdmin/admin-list')
+    resp.send('<h1> Under Construction. </h1>')
 })
+
+
+
+
 app.get('/super-admin/admin-list', (req, resp)=>{
     resp.send("<h1>This is admin list page.</h1>")
 })
@@ -437,7 +471,9 @@ app.get('/super-admin/admin-list', (req, resp)=>{
 // ! *************************************************** //
 // ! *************************************************** //
 
+//*=================================*//
 //  **********ADMIN SIDE***********  //
+//*=================================*//
 
 app.get('/admin-login', (req, resp) => {
     resp.render('admin/admin-login')
@@ -457,8 +493,9 @@ app.get('/admin/about', (req, resp) => {
 
 
 
-
+//=========================//
 // COMPOSEING NEW PRECTICAL
+//=========================//
 app.post('/admin/compose', async (req, resp) => {
     let departmantName = req.body.department;
     console.log(departmantName)
@@ -571,8 +608,9 @@ app.post('/admin/compose', async (req, resp) => {
 
 
 
-
+//============================================================================//
 // FETCHING DATA FROM DATABASE AND SHOWING EACH DEPARTMENT AND YEAR SEPARATELY
+//============================================================================//
 app.get('/admin/virtual-lab/biotechnology/:year', async (req, resp) => {
 
     const year = req.params.year
@@ -810,8 +848,9 @@ app.get('/admin/virtual-lab/chemistry/:year', async (req, resp) => {
 
 
 
-
+//=============================================//
 // GETTING PERTICULAR PRACTICAL BY SEARCHING ID.
+//=============================================//
 app.get('/admin/:DepartmentName/:year/:practical_Id', async (req, resp) => {
 
     let departmantName = req.params.DepartmentName
@@ -907,8 +946,9 @@ app.get('/admin/:DepartmentName/:year/:practical_Id', async (req, resp) => {
 
 
 
-
+//===============//
 // EDIT PRACTICAL
+//===============//
 app.get('/admin/:DepartmentName/:year/:practical_Id/edit', async(req, resp)=>{
 
     console.log(req.params)
@@ -1017,8 +1057,9 @@ app.get('/admin/:DepartmentName/:year/:practical_Id/edit', async(req, resp)=>{
 
 
 
-
+//==========================================//
 // UPDATE THE DATABASE WITH EDITED PRACYICAL
+//==========================================//
 app.put('/admin/update-practical', async(req, resp)=>{
     let practical_Id = req.body.id
     let departmantName = req.body.department
@@ -1127,8 +1168,9 @@ app.put('/admin/update-practical', async(req, resp)=>{
 
 
 
-
+//==================//
 // DELETE PRACTICAL
+//==================//
 app.delete('/admin/:DepartmentName/:year/:practical_Id/delete', async (req, resp) => {
     // console.log(req.params)
     const departmantName = req.params.DepartmentName

@@ -1,4 +1,4 @@
- @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@700&display=swap');
 
  body {
          padding: 5rem;
@@ -18,8 +18,10 @@
          align-items: center;
          color: #367D43;
  }
-
- h3 {
+ .head h1{
+         font-size: 3rem;
+ }
+ .head h3 {
          color: rgb(121, 121, 121);
  }
 
