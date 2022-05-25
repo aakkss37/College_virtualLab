@@ -51,9 +51,9 @@ adminSchema.plugin(passportLocalMongoose)
 
 const Admin = mongoose.model('Admin', adminSchema)
 
-passport.use(User.createStrategy());
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
+passport.use(Admin.createStrategy());
+passport.serializeUser(Admin.serializeUser());
+passport.deserializeUser(Admin.deserializeUser());
 
 
 // ! *************************************************** //
@@ -446,9 +446,28 @@ app.get('/super-admin/create-admin', (req, resp)=>{
     resp.render('superAdmin/new-admin')
 })
 
+//========================//
+// NEW ADMIN REGISTRATION //
+//========================//
 app.post('/create-admin', (req, resp)=>{
     console.log('working')
-
+    Admin.register({
+        name: req.body.facilityName,
+        department: req.body.department,
+        adminID: req.body.adminID,
+    }, req.body.password, (err, user)=>{
+        if(err){
+            console.log(err)
+            resp.status(400)
+            resp.redirect('/super-admin/create-admin')
+        }
+        else{
+            passport.authenticate('local')(req, resp, ()=>{
+                resp.status(200)
+                resp.redirect('/super-admin/admin-list')
+            })
+        }
+    })
 })
 
 app.get('/super-admin/admin-list', (req, resp) => {
