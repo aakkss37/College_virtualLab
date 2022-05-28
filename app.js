@@ -49,7 +49,9 @@ const adminSchema = new mongoose.Schema({
     name: String,
     department: String,
     username: String,
-    password: String
+    password: String,
+    isAdmin: Boolean,
+    isSuperAdmin: Boolean
 })
 adminSchema.plugin(passportLocalMongoose)
 
@@ -85,7 +87,7 @@ app.get('/virtuallab', (req, resp) => {
     resp.render('client/virtualLab')
 })
 
-app.get('/home/about', (req, resp)=>{
+app.get('/home/about', (req, resp) => {
     resp.render('client/about')
 })
 
@@ -366,51 +368,51 @@ app.get('/home/:DepartmentName/:year/:practical_Id', async (req, resp) => {
     console.log(practical_Id)
     if (departmantName === 'Biotechnogoly') {
         try {
-            const foundItem = await Biotechnogoly.findOne({ _id: practical_Id})
-                resp.render('client/practical', {
-                    data: foundItem.quillData,
-                    title: foundItem.title
-                })
+            const foundItem = await Biotechnogoly.findOne({ _id: practical_Id })
+            resp.render('client/practical', {
+                data: foundItem.quillData,
+                title: foundItem.title
+            })
         } catch (err) {
             console.log(err);
         }
     } else if (departmantName === 'Physics') {
         try {
             const foundItem = await Physics.findOne({ _id: practical_Id })
-                resp.render('client/practical', {
-                    data: foundItem.quillData,
-                    title: foundItem.title
-                })
+            resp.render('client/practical', {
+                data: foundItem.quillData,
+                title: foundItem.title
+            })
         } catch (err) {
             console.log(err);
         }
     } else if (departmantName === 'Cybersecurity') {
         try {
             const foundItem = await Cybersecurity.findOne({ _id: practical_Id })
-                resp.render('client/practical', {
-                    data: foundItem.quillData,
-                    title: foundItem.title
-                })
+            resp.render('client/practical', {
+                data: foundItem.quillData,
+                title: foundItem.title
+            })
         } catch (err) {
             console.log(err);
         }
     } else if (departmantName === 'Computer Science') {
         try {
             const foundItem = await Computer_Science.findOne({ _id: practical_Id })
-                resp.render('client/practical', {
-                    data: foundItem.quillData,
-                    title: foundItem.title
-                })
+            resp.render('client/practical', {
+                data: foundItem.quillData,
+                title: foundItem.title
+            })
         } catch (err) {
             console.log(err);
         }
     } else if (departmantName === 'Chemistry') {
         try {
             const foundItem = await Chemistry.findOne({ _id: practical_Id })
-                resp.render('client/practical', {
-                    data: foundItem.quillData,
-                    title: foundItem.title
-                })
+            resp.render('client/practical', {
+                data: foundItem.quillData,
+                title: foundItem.title
+            })
         } catch (err) {
             console.log(err);
         }
@@ -418,10 +420,10 @@ app.get('/home/:DepartmentName/:year/:practical_Id', async (req, resp) => {
     else if (departmantName === 'Mathematics') {
         try {
             const foundItem = await Mathematics.findOne({ _id: practical_Id })
-                resp.render('client/practical', {
-                    data: foundItem.quillData,
-                    title: foundItem.title
-                })
+            resp.render('client/practical', {
+                data: foundItem.quillData,
+                title: foundItem.title
+            })
         } catch (err) {
             console.log(err);
         }
@@ -444,18 +446,68 @@ app.get('/home/:DepartmentName/:year/:practical_Id', async (req, resp) => {
 //  **********SUPER ADMIN************  //
 //*===================================*//
 
+//===================//
+// SUPER ADMIN LOGIN //
+//===================//
 app.get('/super-admin/login', (req, resp) => {
     resp.render('superAdmin/super-admin-login')
 })
+app.post('/super-admin/login', async (req, resp) => {
+    try {
+        
+        const foundUser = await Admin.findOne({ username: req.body.username })
+        // console.log(foundUser.username)
+        if (foundUser.isSuperAdmin) {
+            const superUser = new Admin({
+                username: req.body.username,
+                password: req.body.password
+            })
+            req.logIn(superUser, (err) => {
+                if (err) console.log(err)
+                else {
+                    passport.authenticate('local')(req, resp, () => {
+                        // console.log('working inside')
+                        if (req.isAuthenticated()) {
+                            resp.redirect('/super-admin/admin-list')
+                            console.log('Login sucessful')
+                        } else {                            
+                            alert('wrong user-ID or password')
+                            resp.redirect('/super-admin/login')
+                        }
+                    });
+                }
+            })
+        }else{
+            alert('Unauthorized Request')
+            resp.redirect('/super-admin/login')
+        }
+    } catch (error) {
+        console.log(error)
+    }
 
-app.get('/super-admin/create-admin', (req, resp)=>{
-    resp.render('superAdmin/new-admin')
 })
-
+//====================//
+// SUPER ADMIN LOGOUT //
+//====================//
+app.get('/super-admin/logout', async (req, resp) => {
+    try {
+        req.logOut((err) => {
+            if (err) return next(err);
+            console.log('Logout sucessfull')
+            alert('Logut sucessfully')
+            resp.sendStatus(200)
+        });
+    } catch (error) {
+        console.log(error)
+    }
+})
 //========================//
 // NEW ADMIN REGISTRATION //
 //========================//
-app.post('/super-admin/create-admin', async(req, resp)=>{
+app.get('/super-admin/create-admin', (req, resp) => {
+    resp.render('superAdmin/new-admin')
+})
+app.post('/super-admin/create-admin', async (req, resp) => {
     console.log('working', req.body.username)
     try {
         const foundUser = await Admin.find({ username: req.body.username })
@@ -470,10 +522,12 @@ app.post('/super-admin/create-admin', async(req, resp)=>{
                 username: req.body.username,
                 name: req.body.facultyName,
                 department: req.body.department,
+                isAdmin: true,
+                isSuperAdmin: false
             }, req.body.password, (err, user) => {
                 if (err) {
                     console.log(err)
-                    resp.status(400)
+                    resp.sendStatus(400)
                     resp.redirect('/super-admin/create-admin')
                 }
                 else {
@@ -484,23 +538,50 @@ app.post('/super-admin/create-admin', async(req, resp)=>{
                 }
             })
         }
-    } 
+    }
     catch (err) {
         console.log(err)
     }
 })
 
-app.get('/super-admin/admin-list', (req, resp) => {
-    // resp.render('superAdmin/admin-list')
-    resp.send('<h1> Under Construction. </h1>')
+
+app.get('/super-admin/admin-list', async (req, resp) => {
+
+    try {
+        const allAdmin = await Admin.find()
+        resp.render('superAdmin/admin-list', {
+            foundItems: allAdmin
+        });
+    } catch (error) {
+        console.log(error)
+    }
+})
+//==============//
+// ADMIN DELETE //
+//==============//
+app.delete('/super-admin/admin/:admin_username/:admin_id/delete', async (req, resp) => {
+    try {
+        // const adminUsername = req.params.admin_username;
+        const adminId = req.params.admin_id
+        await Admin.findByIdAndDelete(adminId, (err, doc) => {
+            if (err) {
+                console.log(err)
+            }
+            else {
+                console.log(doc, 'deleted')
+                alert('Deleted Sucessfully')
+                resp.sendStatus(200);
+            }
+        })
+
+
+    } catch (error) {
+        console.log(error)
+    }
+
 })
 
 
-
-
-app.get('/super-admin/admin-list', (req, resp)=>{
-    resp.send("<h1>This is admin list page.</h1>")
-})
 
 // ! *************************************************** //
 // ! *************************************************** //
@@ -521,45 +602,45 @@ app.get('/admin-login', (req, resp) => {
 //==========================//
 // AUTHANTICATE ADMIN LOGIN //
 //==========================//
-// app.post('/admin-login', (req, resp) => {
-//     console.log('post request recieved')
-//     const user = new Admin({
-//         username: req.body.username,
-//         password: req.body.password
-//     })
-//     req.logIn(user, (err) => {
-//         if (err) console.log(err)
-//         else {
-//             passport.authenticate('local')(req, resp, ()=>{
-//                 console.log('working inside')
-//                 if (req.isAuthenticated()) {
-//                     resp.redirect('/admin/compose')
-//                     console.log('Login sucessful')
-//                 } else {
-//                     alert('wrong user-ID or password')
-//                     resp.redirect('/admin-login')
-                    
-//                 }
-//             });
-//         }
-//     })
-// })
+app.post('/admin-login', (req, resp) => {
+    // console.log('post request recieved')
+    const user = new Admin({
+        username: req.body.username,
+        password: req.body.password
+    })
+    req.logIn(user, (err) => {
+        if (err) console.log(err)
+        else {
+            passport.authenticate('local')(req, resp, () => {
+                console.log('working inside')
+                if (req.isAuthenticated()) {
+                    resp.redirect('/admin/compose')
+                    console.log('Login sucessful')
+                } else {
+                    alert('wrong user-ID or password')
+                    resp.redirect('/admin-login')
 
-app.post("/admin-login", passport.authenticate('local', {
-    successRedirect: "/admin/compose",
-    failureRedirect: "/admin-login",
-    failureFlash: true
-}), (req, res)=>{
-
+                }
+            });
+        }
+    })
 })
 
-//========//
-//!LOGOUT!//
-//========//
-app.get('/logout', async(req, resp)=>{
+// app.post("/admin-login", passport.authenticate('local', {
+//     successRedirect: "/admin/compose",
+//     failureRedirect: "/admin-login",
+//     failureFlash: true
+// }), (req, res)=>{
+
+// })
+
+//==============//
+// ADMIN LOGOUT //
+//==============//
+app.get('/logout', async (req, resp) => {
     try {
-        req.logOut((err)=>{
-            if(err) return next(err);
+        req.logOut((err) => {
+            if (err) return next(err);
             console.log('Logout sucessfull')
             resp.redirect('/admin-login')
         });
@@ -575,6 +656,7 @@ app.get('/admin/virtuallab', (req, resp) => {
     if (req.isAuthenticated()) {
         resp.render('admin/virtualLab')
     } else {
+        alert('Please Login')
         resp.redirect('/admin-login')
     }
 })
@@ -583,6 +665,7 @@ app.get('/admin/compose', (req, resp) => {
     if (req.isAuthenticated()) {
         resp.render('admin/compose')
     } else {
+        alert('Please Login')
         resp.redirect('/admin-login')
     }
 })
@@ -591,6 +674,7 @@ app.get('/admin/about', (req, resp) => {
     if (req.isAuthenticated()) {
         resp.render('admin/about')
     } else {
+        alert('Please Login')
         resp.redirect('/admin-login')
     }
 })
@@ -707,11 +791,12 @@ app.post('/admin/compose', async (req, resp) => {
             }
 
             resp.status(400).send({ "message": "data cannot be empty" });
-        } 
+        }
     } else {
+        alert('Please Login')
         resp.redirect('/admin-login')
     }
-    
+
     // resp.redirect('/client/departmentlab')
 })
 
@@ -759,6 +844,7 @@ app.get('/admin/virtual-lab/biotechnology/:year', async (req, resp) => {
             }
         }
     } else {
+        alert('Please Login')
         resp.redirect('/admin-login')
     }
 })
@@ -802,6 +888,7 @@ app.get('/admin/virtual-lab/physics/:year', async (req, resp) => {
             }
         }
     } else {
+        alert('Please Login')
         resp.redirect('/admin-login')
     }
 
@@ -846,6 +933,7 @@ app.get('/admin/virtual-lab/mathematics/:year', async (req, resp) => {
             }
         }
     } else {
+        alert('Please Login')
         resp.redirect('/admin-login')
     }
 
@@ -890,13 +978,14 @@ app.get('/admin/virtual-lab/cybersecurity/:year', async (req, resp) => {
             }
         }
     } else {
+        alert('Please Login')
         resp.redirect('/admin-login')
     }
 
 })
 
 app.get('/admin/virtual-lab/computer-science/:year', async (req, resp) => {
-    
+
     if (req.isAuthenticated()) {
         const year = req.params.year
 
@@ -934,6 +1023,7 @@ app.get('/admin/virtual-lab/computer-science/:year', async (req, resp) => {
             }
         }
     } else {
+        alert('Please Login')
         resp.redirect('/admin-login')
     }
 
@@ -978,6 +1068,7 @@ app.get('/admin/virtual-lab/chemistry/:year', async (req, resp) => {
             }
         }
     } else {
+        alert('Please Login')
         resp.redirect('/admin-login')
     }
 
@@ -1080,6 +1171,7 @@ app.get('/admin/:DepartmentName/:year/:practical_Id', async (req, resp) => {
             }
         }
     } else {
+        alert('Please Login')
         resp.redirect('/admin-login')
     }
 
@@ -1090,7 +1182,7 @@ app.get('/admin/:DepartmentName/:year/:practical_Id', async (req, resp) => {
 //===============//
 // EDIT PRACTICAL
 //===============//
-app.get('/admin/:DepartmentName/:year/:practical_Id/edit', async(req, resp)=>{
+app.get('/admin/:DepartmentName/:year/:practical_Id/edit', async (req, resp) => {
 
     if (req.isAuthenticated()) {
         console.log(req.params)
@@ -1195,9 +1287,10 @@ app.get('/admin/:DepartmentName/:year/:practical_Id/edit', async(req, resp)=>{
             }
         }
     } else {
+        alert('Please Login')
         resp.redirect('/admin-login')
     }
-    
+
 })
 
 
@@ -1205,7 +1298,7 @@ app.get('/admin/:DepartmentName/:year/:practical_Id/edit', async(req, resp)=>{
 //==========================================//
 // UPDATE THE DATABASE WITH EDITED PRACYICAL
 //==========================================//
-app.put('/admin/update-practical', async(req, resp)=>{
+app.put('/admin/update-practical', async (req, resp) => {
 
     if (req.isAuthenticated()) {
         let practical_Id = req.body.id
@@ -1311,6 +1404,7 @@ app.put('/admin/update-practical', async(req, resp)=>{
             }
         }
     } else {
+        alert('Please Login')
         resp.redirect('/admin-login')
     }
 
@@ -1322,7 +1416,7 @@ app.put('/admin/update-practical', async(req, resp)=>{
 // DELETE PRACTICAL
 //==================//
 app.delete('/admin/:DepartmentName/:year/:practical_Id/delete', async (req, resp) => {
-  
+
     if (req.isAuthenticated()) {
         // console.log(req.params)
         const departmantName = req.params.DepartmentName
@@ -1385,8 +1479,9 @@ app.delete('/admin/:DepartmentName/:year/:practical_Id/delete', async (req, resp
             catch (err) {
                 console.log(err);
             }
-        } 
+        }
     } else {
+        alert('Please Login')
         resp.redirect('/admin-login')
     }
 

@@ -48,7 +48,7 @@ saveBtn.addEventListener('click', async (event) => {
 
                 if (data.get('title') && data.get('discreption') && data.get('year') && data.get('department')) {
 
-                        const xyz = await axios.put('/admin/update-practical', {
+                        const update = await axios.put('/admin/update-practical', {
                                 id: data.get('practical_Id'),
                                 department: data.get('department'),
                                 year: data.get('year'),

@@ -55,11 +55,18 @@
  }
 
  #submitBtn {
+         color: #cadbc2;;
+ }
+ #submitBtn:hover{
          color: white;
  }
 
  #logout {
+         color: #cadbc2;;
+ }
+ #logout:hover {
          color: white;
+         cursor: pointer;
  }
 
  @media (max-width: 512px){

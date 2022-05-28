@@ -5,74 +5,14 @@
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://kit.fontawesome.com/bdffa3c92f.js" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="/css/superAdmin_css/admin-list.css">
         <title>Document</title>
+
 </head>
 
 <body>
-        <!-- CSS Code: Place this code in the document's head (between the 'head' tags) -->
-        <style>
-                @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap');
-
-                body {
-                        padding: 5rem;
-                        background: #cadbc2;
-                        overflow-x: hidden;
-                        font-family: 'Ubuntu', sans-serif;
-                }
-
-                img {
-                        width: 150px;
-                        height: 150px;
-                }
-
-                .head {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        color: #367D43;
-                }
-
-                .head h1 {
-                        margin: 2px;
-                        font-size: 3rem;
-                }
-
-                .head h3 {
-                        color: rgb(121, 121, 121);
-                }
-
-                table.GeneratedTable {
-                        width: 100%;
-                        background-color: #ffffff;
-                        border: none;
-                        border-collapse: collapse;
-                        color: #000000;
-                }
-
-                table.GeneratedTable td,
-                table.GeneratedTable th {
-                        border-width: 2px;
-                        border-color: #367D43;
-                        border-style: solid;
-                        padding: 3px;
-                }
-
-                table.GeneratedTable thead {
-                        background-color: #367D43;
-                }
-
-                @media (max-width: 512px) {
-
-                        img {
-                                max-width: 100%;
-                                max-height: 100%;
-                        }
-
-                        body {
-                                padding: 3px;
-                        }
-                }
-        </style>
 
         <div class="head">
                 <img src="\images\KAHE_logo.png" alt="" srcset="">
@@ -93,19 +33,58 @@
                         </tr>
                 </thead>
                 <tbody>
+                        
                         <% foundItems.forEach((element)=> { %>
-                        <tr>
-                                <td><%= element.Department %></td>
-                                <td><%= element.facilityName %></td>
-                                <td><%= element.adminID %></td>
+                        <tr class="adminDetails">
+                                <td><%= element.department %></td>
+                                <td><%= element.name %></td>
+                                <td><%= element.username %></td>
                                 
-                                <td style="border-color: #cadbc2; background-color: #cadbc2"><a href="admin/<%=element._objectID%>/delete">delete</a></td>
+                                <td class="delete"  style="border-color: #cadbc2; background-color: #cadbc2">
+                                        <a class="deleteBtn" onclick="confirmDelete('<%- element.username %>', '<%- element.name %>', '<%- element._id %>')">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                        </a>
+                                </td>
                         </tr>
                         <% }); %>
                 </tbody>
         </table>
-        <!-- Codes by Quackit.com -->
+        <br><br>
+        <div class="btn">
+                <button id="createAdmin" onclick="window.location.href = '/super-admin/create-admin'"><i class="fa-solid fa-plus"></i> Create Admin</button>
+                <button id="logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+        </div>
+        
+
 
 </body>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+
+        const confirmDelete = async(username, name, id)=>{
+                try {
+                        console.log('clicked')
+                        const deleteAdmin = window.prompt(`This action cannot be undone. This will permanently delete the admin - ${name}.\nWe believe you understande the consequences.\nTo confirm this Delete, Please type the following "${username}" down below 👇`)
+                        if (deleteAdmin == username) {
+                                await axios.delete(`/super-admin/admin/${username}/${id}/delete`);
+                                console.log('verified')
+                                window.location.reload()
+                        }
+                        else {
+                                window.alert('Failed!')
+                        }  
+                } catch (error) {
+                        console.log(error)
+                }
+                
+        }
+
+        const logout = async ()=>{
+                await axios.get('/super-admin/logout')
+                window.location.href = '/super-admin/login'
+        }
+
+</script>
 
 </html>

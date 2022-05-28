@@ -13,18 +13,17 @@
 
 
     <!-- partial:index.partial.html -->
-    <form action="/admin-login" method="practical">
+    <form action="/super-admin/login" method="post">
         <img src="\images\KAHE_logo.png" alt="" srcset="">
         <br><br>
 
         <div class="form-field">
-            <input type="email" placeholder="Email / Username" required />
+            <input name="username" type="email" placeholder="Username" required />
         </div>
 
         <div class="form-field">
-            <input type="password" placeholder="Password" required />
+            <input name="password" type="password" placeholder="Password" required />
         </div>
-
         <div class="form-field">
             <button class="btn" type="submit">Log in</button>
         </div>
