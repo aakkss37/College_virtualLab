@@ -4,7 +4,10 @@ const ejs = require("ejs");
 const mongoose = require('mongoose')
 const session = require('express-session')
 const passport = require('passport')
-const passportLocalMongoose = require('passport-local-mongoose')
+const passportLocalMongoose = require('passport-local-mongoose');
+const { use } = require('passport/lib');
+const alert = require('alert')
+const flash = require("connect-flash");
 
 
 const app = express();
@@ -19,6 +22,7 @@ app.use(session({
 }))
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(flash());
 
 //*==============================================================*//
 //  **********MONGOOSE CONNECTION, SCHEMA AND PLUGIN************  //
@@ -44,7 +48,7 @@ const Mathematics = mongoose.model('Mathematics', practicalSchema)
 const adminSchema = new mongoose.Schema({
     name: String,
     department: String,
-    adminID: String,
+    username: String,
     password: String
 })
 adminSchema.plugin(passportLocalMongoose)
@@ -54,6 +58,7 @@ const Admin = mongoose.model('Admin', adminSchema)
 passport.use(Admin.createStrategy());
 passport.serializeUser(Admin.serializeUser());
 passport.deserializeUser(Admin.deserializeUser());
+
 
 
 // ! *************************************************** //
@@ -442,6 +447,7 @@ app.get('/home/:DepartmentName/:year/:practical_Id', async (req, resp) => {
 app.get('/super-admin/login', (req, resp) => {
     resp.render('superAdmin/super-admin-login')
 })
+
 app.get('/super-admin/create-admin', (req, resp)=>{
     resp.render('superAdmin/new-admin')
 })
@@ -449,25 +455,39 @@ app.get('/super-admin/create-admin', (req, resp)=>{
 //========================//
 // NEW ADMIN REGISTRATION //
 //========================//
-app.post('/create-admin', (req, resp)=>{
-    console.log('working')
-    Admin.register({
-        name: req.body.facilityName,
-        department: req.body.department,
-        adminID: req.body.adminID,
-    }, req.body.password, (err, user)=>{
-        if(err){
-            console.log(err)
-            resp.status(400)
+app.post('/super-admin/create-admin', async(req, resp)=>{
+    console.log('working', req.body.username)
+    try {
+        const foundUser = await Admin.find({ username: req.body.username })
+        if (foundUser.length) {
+            console.log('User name already exist.')
+            alert('User name already exist.')
             resp.redirect('/super-admin/create-admin')
+            console.log(foundUser)
         }
-        else{
-            passport.authenticate('local')(req, resp, ()=>{
-                resp.status(200)
-                resp.redirect('/super-admin/admin-list')
+        else {
+            Admin.register({
+                username: req.body.username,
+                name: req.body.facultyName,
+                department: req.body.department,
+            }, req.body.password, (err, user) => {
+                if (err) {
+                    console.log(err)
+                    resp.status(400)
+                    resp.redirect('/super-admin/create-admin')
+                }
+                else {
+                    passport.authenticate('local')(req, resp, () => {
+                        console.log('new user registered \n', user)
+                        resp.redirect('/super-admin/admin-list')
+                    })
+                }
             })
         }
-    })
+    } 
+    catch (err) {
+        console.log(err)
+    }
 })
 
 app.get('/super-admin/admin-list', (req, resp) => {
@@ -498,130 +518,200 @@ app.get('/admin-login', (req, resp) => {
     resp.render('admin/admin-login')
 })
 
+//==========================//
+// AUTHANTICATE ADMIN LOGIN //
+//==========================//
+// app.post('/admin-login', (req, resp) => {
+//     console.log('post request recieved')
+//     const user = new Admin({
+//         username: req.body.username,
+//         password: req.body.password
+//     })
+//     req.logIn(user, (err) => {
+//         if (err) console.log(err)
+//         else {
+//             passport.authenticate('local')(req, resp, ()=>{
+//                 console.log('working inside')
+//                 if (req.isAuthenticated()) {
+//                     resp.redirect('/admin/compose')
+//                     console.log('Login sucessful')
+//                 } else {
+//                     alert('wrong user-ID or password')
+//                     resp.redirect('/admin-login')
+                    
+//                 }
+//             });
+//         }
+//     })
+// })
+
+app.post("/admin-login", passport.authenticate('local', {
+    successRedirect: "/admin/compose",
+    failureRedirect: "/admin-login",
+    failureFlash: true
+}), (req, res)=>{
+
+})
+
+//========//
+//!LOGOUT!//
+//========//
+app.get('/logout', async(req, resp)=>{
+    try {
+        req.logOut((err)=>{
+            if(err) return next(err);
+            console.log('Logout sucessfull')
+            resp.redirect('/admin-login')
+        });
+    } catch (error) {
+        console.log(error)
+    }
+})
+
+
+
+
 app.get('/admin/virtuallab', (req, resp) => {
-    resp.render('admin/virtualLab')
+    if (req.isAuthenticated()) {
+        resp.render('admin/virtualLab')
+    } else {
+        resp.redirect('/admin-login')
+    }
 })
 
 app.get('/admin/compose', (req, resp) => {
-    resp.render('admin/compose')
+    if (req.isAuthenticated()) {
+        resp.render('admin/compose')
+    } else {
+        resp.redirect('/admin-login')
+    }
 })
 
 app.get('/admin/about', (req, resp) => {
-    resp.render('admin/about')
+    if (req.isAuthenticated()) {
+        resp.render('admin/about')
+    } else {
+        resp.redirect('/admin-login')
+    }
 })
 
 
 
 //=========================//
-// COMPOSEING NEW PRECTICAL
+// COMPOSEING NEW PRECTICAL//
 //=========================//
 app.post('/admin/compose', async (req, resp) => {
-    let departmantName = req.body.department;
-    console.log(departmantName)
+    if (req.isAuthenticated()) {
+        let departmantName = req.body.department;
+        console.log(departmantName)
 
-    if (departmantName === 'Biotechnology'){
-        try {
-            console.log(departmantName)
-            const incoming = new Biotechnogoly({
-                department: req.body.department,
-                year: req.body.year,
-                title: req.body.title,
-                discreption: req.body.discreption,
-                quillData: req.body.quillData
-            });
-            await incoming.save()
-            resp.status(201).send({ "message": "saved" });
-        } catch (err) {
-            resp.status(400).send({ "message": err });
-        }
+        if (departmantName === 'Biotechnology') {
+            try {
+                console.log(departmantName)
+                const incoming = new Biotechnogoly({
+                    department: req.body.department,
+                    year: req.body.year,
+                    title: req.body.title,
+                    discreption: req.body.discreption,
+                    quillData: req.body.quillData
+                });
+                await incoming.save()
+                resp.status(201).send({ "message": "saved" });
+            } catch (err) {
+                resp.status(400).send({ "message": err });
+            }
 
-        resp.status(400).send({ "message": "data cannot be empty" });
-    } else if (departmantName === 'Physics') {
-        try {
-            console.log(departmantName)
-            const incoming = new Physics({
-                department: req.body.department,
-                year: req.body.year,
-                title: req.body.title,
-                discreption: req.body.discreption,
-                quillData: req.body.quillData
-            });
-            await incoming.save()
-            resp.status(201).send({ "message": "saved" });
-        } catch (err) {
-            resp.status(400).send({ "message": err });
-        }
+            resp.status(400).send({ "message": "data cannot be empty" });
+        } else if (departmantName === 'Physics') {
+            try {
+                console.log(departmantName)
+                const incoming = new Physics({
+                    department: req.body.department,
+                    year: req.body.year,
+                    title: req.body.title,
+                    discreption: req.body.discreption,
+                    quillData: req.body.quillData
+                });
+                await incoming.save()
+                resp.status(201).send({ "message": "saved" });
+            } catch (err) {
+                resp.status(400).send({ "message": err });
+            }
 
-        resp.status(400).send({ "message": "data cannot be empty" });
-    } else if (departmantName === 'Cybersecurity') {
-        try {
-            console.log(departmantName)
-            const incoming = new Cybersecurity({
-                department: req.body.department,
-                year: req.body.year,
-                title: req.body.title,
-                discreption: req.body.discreption,
-                quillData: req.body.quillData
-            });
-            await incoming.save()
-            resp.status(201).send({ "message": "saved" });
-        } catch (err) {
-            resp.status(400).send({ "message": err });
-        }
+            resp.status(400).send({ "message": "data cannot be empty" });
+        } else if (departmantName === 'Cybersecurity') {
+            try {
+                console.log(departmantName)
+                const incoming = new Cybersecurity({
+                    department: req.body.department,
+                    year: req.body.year,
+                    title: req.body.title,
+                    discreption: req.body.discreption,
+                    quillData: req.body.quillData
+                });
+                await incoming.save()
+                resp.status(201).send({ "message": "saved" });
+            } catch (err) {
+                resp.status(400).send({ "message": err });
+            }
 
-        resp.status(400).send({ "message": "data cannot be empty" });
-    } else if (departmantName === 'Computer-science') {
-        try {
-            console.log(departmantName)
-            const incoming = new Computer_Science({
-                department: req.body.department,
-                year: req.body.year,
-                title: req.body.title,
-                discreption: req.body.discreption,
-                quillData: req.body.quillData
-            });
-            await incoming.save()
-            resp.status(201).send({ "message": "saved" });
-        } catch (err) {
-            resp.status(400).send({ "message": err });
-        }
+            resp.status(400).send({ "message": "data cannot be empty" });
+        } else if (departmantName === 'Computer-science') {
+            try {
+                console.log(departmantName)
+                const incoming = new Computer_Science({
+                    department: req.body.department,
+                    year: req.body.year,
+                    title: req.body.title,
+                    discreption: req.body.discreption,
+                    quillData: req.body.quillData
+                });
+                await incoming.save()
+                resp.status(201).send({ "message": "saved" });
+            } catch (err) {
+                resp.status(400).send({ "message": err });
+            }
 
-        resp.status(400).send({ "message": "data cannot be empty" });
-    } else if (departmantName === 'Chemistry') {
-        try {
-            console.log(departmantName)
-            const incoming = new Chemistry({
-                department: req.body.department,
-                year: req.body.year,
-                title: req.body.title,
-                discreption: req.body.discreption,
-                quillData: req.body.quillData
-            });
-            await incoming.save()
-            resp.status(201).send({ "message": "saved" });
-        } catch (err) {
-            resp.status(400).send({ "message": err });
-        }
+            resp.status(400).send({ "message": "data cannot be empty" });
+        } else if (departmantName === 'Chemistry') {
+            try {
+                console.log(departmantName)
+                const incoming = new Chemistry({
+                    department: req.body.department,
+                    year: req.body.year,
+                    title: req.body.title,
+                    discreption: req.body.discreption,
+                    quillData: req.body.quillData
+                });
+                await incoming.save()
+                resp.status(201).send({ "message": "saved" });
+            } catch (err) {
+                resp.status(400).send({ "message": err });
+            }
 
-        resp.status(400).send({ "message": "data cannot be empty" });
-    } else if (departmantName === 'Mathematics') {
-        try {
-            console.log(departmantName)
-            const incoming = new Mathematics({
-                department: req.body.department,
-                year: req.body.year,
-                title: req.body.title,
-                discreption: req.body.discreption,
-                quillData: req.body.quillData
-            });
-            await incoming.save()
-            resp.status(201).send({ "message": "saved" });
-        } catch (err) {
-            resp.status(400).send({ "message": err });
-        }
+            resp.status(400).send({ "message": "data cannot be empty" });
+        } else if (departmantName === 'Mathematics') {
+            try {
+                console.log(departmantName)
+                const incoming = new Mathematics({
+                    department: req.body.department,
+                    year: req.body.year,
+                    title: req.body.title,
+                    discreption: req.body.discreption,
+                    quillData: req.body.quillData
+                });
+                await incoming.save()
+                resp.status(201).send({ "message": "saved" });
+            } catch (err) {
+                resp.status(400).send({ "message": err });
+            }
 
-        resp.status(400).send({ "message": "data cannot be empty" });
-    } 
+            resp.status(400).send({ "message": "data cannot be empty" });
+        } 
+    } else {
+        resp.redirect('/admin-login')
+    }
+    
     // resp.redirect('/client/departmentlab')
 })
 
@@ -632,235 +722,263 @@ app.post('/admin/compose', async (req, resp) => {
 //============================================================================//
 app.get('/admin/virtual-lab/biotechnology/:year', async (req, resp) => {
 
-    const year = req.params.year
+    if (req.isAuthenticated()) {
+        const year = req.params.year
 
-    if (year == 'first-year') {
-        try {
-            const foundItems = await Biotechnogoly.find({ year: 'first-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Biotechnogoly',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        if (year == 'first-year') {
+            try {
+                const foundItems = await Biotechnogoly.find({ year: 'first-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Biotechnogoly',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
-    }
-    else if (year == 'second-year') {
-        try {
-            const foundItems = await Biotechnogoly.find({ year: 'second-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Biotechnogoly',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        else if (year == 'second-year') {
+            try {
+                const foundItems = await Biotechnogoly.find({ year: 'second-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Biotechnogoly',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
-    }
-    else if (year == 'third-year') {
-        try {
-            const foundItems = await Biotechnogoly.find({ year: 'third-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Biotechnogoly',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        else if (year == 'third-year') {
+            try {
+                const foundItems = await Biotechnogoly.find({ year: 'third-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Biotechnogoly',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
+    } else {
+        resp.redirect('/admin-login')
     }
-
 })
+
 app.get('/admin/virtual-lab/physics/:year', async (req, resp) => {
 
-    const year = req.params.year
+    if (req.isAuthenticated()) {
+        const year = req.params.year
 
-    if (year == 'first-year') {
-        try {
-            const foundItems = await Physics.find({ year: 'first-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Physics',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        if (year == 'first-year') {
+            try {
+                const foundItems = await Physics.find({ year: 'first-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Physics',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
-    }
-    else if (year == 'second-year') {
-        try {
-            const foundItems = await Physics.find({ year: 'second-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Physics',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        else if (year == 'second-year') {
+            try {
+                const foundItems = await Physics.find({ year: 'second-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Physics',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
-    }
-    else if (year == 'third-year') {
-        try {
-            const foundItems = await Physics.find({ year: 'third-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Physics',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        else if (year == 'third-year') {
+            try {
+                const foundItems = await Physics.find({ year: 'third-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Physics',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
+    } else {
+        resp.redirect('/admin-login')
     }
 
 })
+
 app.get('/admin/virtual-lab/mathematics/:year', async (req, resp) => {
 
-    const year = req.params.year
+    if (req.isAuthenticated()) {
+        const year = req.params.year
 
-    if (year == 'first-year') {
-        try {
-            const foundItems = await Mathematics.find({ year: 'first-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Mathematics',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        if (year == 'first-year') {
+            try {
+                const foundItems = await Mathematics.find({ year: 'first-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Mathematics',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
-    }
-    else if (year == 'second-year') {
-        try {
-            const foundItems = await Mathematics.find({ year: 'second-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Mathematics',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        else if (year == 'second-year') {
+            try {
+                const foundItems = await Mathematics.find({ year: 'second-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Mathematics',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
-    }
-    else if (year == 'third-year') {
-        try {
-            const foundItems = await Mathematics.find({ year: 'third-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Mathematics',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        else if (year == 'third-year') {
+            try {
+                const foundItems = await Mathematics.find({ year: 'third-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Mathematics',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
+    } else {
+        resp.redirect('/admin-login')
     }
 
 })
+
 app.get('/admin/virtual-lab/cybersecurity/:year', async (req, resp) => {
 
-    const year = req.params.year
+    if (req.isAuthenticated()) {
+        const year = req.params.year
 
-    if (year == 'first-year') {
-        try {
-            const foundItems = await Cybersecurity.find({ year: 'first-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Cybersecurity',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        if (year == 'first-year') {
+            try {
+                const foundItems = await Cybersecurity.find({ year: 'first-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Cybersecurity',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
-    }
-    else if (year == 'second-year') {
-        try {
-            const foundItems = await Cybersecurity.find({ year: 'second-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Cybersecurity',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        else if (year == 'second-year') {
+            try {
+                const foundItems = await Cybersecurity.find({ year: 'second-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Cybersecurity',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
-    }
-    else if (year == 'third-year') {
-        try {
-            const foundItems = await Cybersecurity.find({ year: 'third-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Cybersecurity',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        else if (year == 'third-year') {
+            try {
+                const foundItems = await Cybersecurity.find({ year: 'third-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Cybersecurity',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
+    } else {
+        resp.redirect('/admin-login')
     }
 
 })
+
 app.get('/admin/virtual-lab/computer-science/:year', async (req, resp) => {
+    
+    if (req.isAuthenticated()) {
+        const year = req.params.year
 
-    const year = req.params.year
-
-    if (year == 'first-year') {
-        try {
-            const foundItems = await Computer_Science.find({ year: 'first-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Computer Science',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        if (year == 'first-year') {
+            try {
+                const foundItems = await Computer_Science.find({ year: 'first-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Computer Science',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
-    }
-    else if (year == 'second-year') {
-        try {
-            const foundItems = await Computer_Science.find({ year: 'second-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Computer Science',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        else if (year == 'second-year') {
+            try {
+                const foundItems = await Computer_Science.find({ year: 'second-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Computer Science',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
-    }
-    else if (year == 'third-year') {
-        try {
-            const foundItems = await Computer_Science.find({ year: 'third-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Computer Science',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        else if (year == 'third-year') {
+            try {
+                const foundItems = await Computer_Science.find({ year: 'third-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Computer Science',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
+    } else {
+        resp.redirect('/admin-login')
     }
 
 })
+
 app.get('/admin/virtual-lab/chemistry/:year', async (req, resp) => {
 
-    const year = req.params.year
+    if (req.isAuthenticated()) {
+        const year = req.params.year
 
-    if (year == 'first-year') {
-        try {
-            const foundItems = await Chemistry.find({ year: 'first-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Chemistry',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        if (year == 'first-year') {
+            try {
+                const foundItems = await Chemistry.find({ year: 'first-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Chemistry',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
-    }
-    else if (year == 'second-year') {
-        try {
-            const foundItems = await Chemistry.find({ year: 'second-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Chemistry',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        else if (year == 'second-year') {
+            try {
+                const foundItems = await Chemistry.find({ year: 'second-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Chemistry',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
-    }
-    else if (year == 'third-year') {
-        try {
-            const foundItems = await Chemistry.find({ year: 'third-year' })
-            resp.render('admin/departmentLab', {
-                DepartmentName: 'Chemistry',
-                foundItems: foundItems
-            })
-        } catch (err) {
-            console.log(err)
+        else if (year == 'third-year') {
+            try {
+                const foundItems = await Chemistry.find({ year: 'third-year' })
+                resp.render('admin/departmentLab', {
+                    DepartmentName: 'Chemistry',
+                    foundItems: foundItems
+                })
+            } catch (err) {
+                console.log(err)
+            }
         }
+    } else {
+        resp.redirect('/admin-login')
     }
 
 })
@@ -872,93 +990,97 @@ app.get('/admin/virtual-lab/chemistry/:year', async (req, resp) => {
 //=============================================//
 app.get('/admin/:DepartmentName/:year/:practical_Id', async (req, resp) => {
 
-    let departmantName = req.params.DepartmentName
-    let student_year = req.params.year
-    let practical_Id = req.params.practical_Id
-    console.log(departmantName)
-    console.log(student_year)
-    console.log(practical_Id)
-    if (departmantName === 'Biotechnogoly') {
-        try {
-           const foundItem = await Biotechnogoly.findOne({ _id: practical_Id});
-            resp.render('admin/practical', {
-                data: foundItem.quillData,
-                title: foundItem.title,
-                id: foundItem._id,
-                department: foundItem.department,
-                year: foundItem.year
-            })
-        } catch (err) {
-            console.log(err);
-        }
-    } else if (departmantName === 'Physics') {
-        try {
-            const foundItem = await Physics.findOne({ _id: practical_Id })
-            resp.render('admin/practical', {
-                data: foundItem.quillData,
-                title: foundItem.title,
-                id: foundItem._id,
-                department: foundItem.department,
-                year: foundItem.year
-            })
-            
+    if (req.isAuthenticated()) {
+        let departmantName = req.params.DepartmentName
+        let student_year = req.params.year
+        let practical_Id = req.params.practical_Id
+        console.log(departmantName)
+        console.log(student_year)
+        console.log(practical_Id)
+        if (departmantName === 'Biotechnogoly') {
+            try {
+                const foundItem = await Biotechnogoly.findOne({ _id: practical_Id });
+                resp.render('admin/practical', {
+                    data: foundItem.quillData,
+                    title: foundItem.title,
+                    id: foundItem._id,
+                    department: foundItem.department,
+                    year: foundItem.year
+                })
+            } catch (err) {
+                console.log(err);
+            }
+        } else if (departmantName === 'Physics') {
+            try {
+                const foundItem = await Physics.findOne({ _id: practical_Id })
+                resp.render('admin/practical', {
+                    data: foundItem.quillData,
+                    title: foundItem.title,
+                    id: foundItem._id,
+                    department: foundItem.department,
+                    year: foundItem.year
+                })
 
-        } catch (err) {
-            console.log(err);
+
+            } catch (err) {
+                console.log(err);
+            }
+        } else if (departmantName === 'Cybersecurity') {
+            try {
+                const foundItem = await Cybersecurity.findOne({ _id: practical_Id })
+                resp.render('admin/practical', {
+                    data: foundItem.quillData,
+                    title: foundItem.title,
+                    id: foundItem._id,
+                    department: foundItem.department,
+                    year: foundItem.year
+                })
+            } catch (err) {
+                console.log(err);
+            }
+        } else if (departmantName === 'Computer Science') {
+            try {
+                const foundItem = await Computer_Science.findOne({ _id: practical_Id })
+                resp.render('admin/practical', {
+                    data: foundItem.quillData,
+                    title: foundItem.title,
+                    id: foundItem._id,
+                    department: foundItem.department,
+                    year: foundItem.year
+                })
+            } catch (err) {
+                console.log(err);
+            }
+        } else if (departmantName === 'Chemistry') {
+            try {
+                const foundItem = await Chemistry.findOne({ _id: practical_Id })
+                resp.render('admin/practical', {
+                    data: foundItem.quillData,
+                    title: foundItem.title,
+                    id: foundItem._id,
+                    department: foundItem.department,
+                    year: foundItem.year
+                })
+            } catch (err) {
+                console.log(err);
+            }
         }
-    } else if (departmantName === 'Cybersecurity') {
-        try {
-            const foundItem = await Cybersecurity.findOne({ _id: practical_Id })
-            resp.render('admin/practical', {
-                data: foundItem.quillData,
-                title: foundItem.title,
-                id: foundItem._id,
-                department: foundItem.department,
-                year: foundItem.year
-            })
-        } catch (err) {
-            console.log(err);
+        else if (departmantName === 'Mathematics') {
+            try {
+                const foundItem = await Mathematics.findOne({ _id: practical_Id })
+                resp.render('admin/practical', {
+                    data: foundItem.quillData,
+                    title: foundItem.title,
+                    id: foundItem._id,
+                    department: foundItem.department,
+                    year: foundItem.year
+                })
+            } catch (err) {
+                console.log(err);
+            }
         }
-    } else if (departmantName === 'Computer Science') {
-        try {
-            const foundItem = await Computer_Science.findOne({ _id: practical_Id })
-            resp.render('admin/practical', {
-                data: foundItem.quillData,
-                title: foundItem.title,
-                id: foundItem._id,
-                department: foundItem.department,
-                year: foundItem.year
-            })
-        } catch (err) {
-            console.log(err);
-        }
-    } else if (departmantName === 'Chemistry') {
-        try {
-            const foundItem = await Chemistry.findOne({ _id: practical_Id })
-            resp.render('admin/practical', {
-                data: foundItem.quillData,
-                title: foundItem.title,
-                id: foundItem._id,
-                department: foundItem.department,
-                year: foundItem.year
-            })
-        } catch (err) {
-            console.log(err);
-        }
-    }
-    else if (departmantName === 'Mathematics') {
-        try {
-            const foundItem = await Mathematics.findOne({ _id: practical_Id })
-            resp.render('admin/practical', {
-                data: foundItem.quillData,
-                title: foundItem.title,
-                id: foundItem._id,
-                department: foundItem.department,
-                year: foundItem.year
-            })
-        } catch (err) {
-            console.log(err);
-        }
+    } else {
+        resp.redirect('/admin-login')
     }
 
 })
@@ -970,35 +1092,21 @@ app.get('/admin/:DepartmentName/:year/:practical_Id', async (req, resp) => {
 //===============//
 app.get('/admin/:DepartmentName/:year/:practical_Id/edit', async(req, resp)=>{
 
-    console.log(req.params)
+    if (req.isAuthenticated()) {
+        console.log(req.params)
 
-    let departmantName = req.params.DepartmentName
-    let student_year = req.params.year
-    let practical_Id = req.params.practical_Id
-    console.log(departmantName)
-    console.log(student_year)
-    console.log(practical_Id)
+        let departmantName = req.params.DepartmentName
+        let student_year = req.params.year
+        let practical_Id = req.params.practical_Id
+        console.log(departmantName)
+        console.log(student_year)
+        console.log(practical_Id)
 
 
-    if (departmantName === 'Biotechnology') {
-        // console.log('department is : Biotechnology')
-        try {
-            const foundItem =  await Biotechnogoly.findOne({ _id: practical_Id, year: student_year })
-                resp.render('admin/edit', {
-                    id: foundItem._id,
-                    department: foundItem.department,
-                    year: foundItem.year,
-                    title: foundItem.title,
-                    discreption: foundItem.discreption,
-                    data: foundItem.quillData, 
-                })
-        } catch (err) {
-            console.log(err);
-        }
-    }
-    else if (departmantName === 'Physics') {
-        try {
-            const foundItem =  await Physics.findOne({ _id: practical_Id, year: student_year })
+        if (departmantName === 'Biotechnology') {
+            // console.log('department is : Biotechnology')
+            try {
+                const foundItem = await Biotechnogoly.findOne({ _id: practical_Id, year: student_year })
                 resp.render('admin/edit', {
                     id: foundItem._id,
                     department: foundItem.department,
@@ -1007,13 +1115,13 @@ app.get('/admin/:DepartmentName/:year/:practical_Id/edit', async(req, resp)=>{
                     discreption: foundItem.discreption,
                     data: foundItem.quillData,
                 })
-        } catch (err) {
-            console.log(err);
+            } catch (err) {
+                console.log(err);
+            }
         }
-    }
-    else if (departmantName === 'Cybersecurity') {
-        try {
-            const foundItem =  await Cybersecurity.findOne({ _id: practical_Id, year: student_year })
+        else if (departmantName === 'Physics') {
+            try {
+                const foundItem = await Physics.findOne({ _id: practical_Id, year: student_year })
                 resp.render('admin/edit', {
                     id: foundItem._id,
                     department: foundItem.department,
@@ -1022,13 +1130,13 @@ app.get('/admin/:DepartmentName/:year/:practical_Id/edit', async(req, resp)=>{
                     discreption: foundItem.discreption,
                     data: foundItem.quillData,
                 })
-        } catch (err) {
-            console.log(err);
+            } catch (err) {
+                console.log(err);
+            }
         }
-    }
-    else if (departmantName === 'Computer-science') {
-        try {
-            const foundItem =  await Computer_Science.findOne({ _id: practical_Id, year: student_year })
+        else if (departmantName === 'Cybersecurity') {
+            try {
+                const foundItem = await Cybersecurity.findOne({ _id: practical_Id, year: student_year })
                 resp.render('admin/edit', {
                     id: foundItem._id,
                     department: foundItem.department,
@@ -1037,13 +1145,13 @@ app.get('/admin/:DepartmentName/:year/:practical_Id/edit', async(req, resp)=>{
                     discreption: foundItem.discreption,
                     data: foundItem.quillData,
                 })
-        } catch (err) {
-            console.log(err);
+            } catch (err) {
+                console.log(err);
+            }
         }
-    }
-    else if (departmantName === 'Chemistry') {
-        try {
-            const foundItem =  await Chemistry.findOne({ _id: practical_Id, year: student_year })
+        else if (departmantName === 'Computer-science') {
+            try {
+                const foundItem = await Computer_Science.findOne({ _id: practical_Id, year: student_year })
                 resp.render('admin/edit', {
                     id: foundItem._id,
                     department: foundItem.department,
@@ -1052,13 +1160,13 @@ app.get('/admin/:DepartmentName/:year/:practical_Id/edit', async(req, resp)=>{
                     discreption: foundItem.discreption,
                     data: foundItem.quillData,
                 })
-        } catch (err) {
-            console.log(err);
+            } catch (err) {
+                console.log(err);
+            }
         }
-    }
-    else if (departmantName === 'Mathematics') {
-        try {
-            const foundItem =  await Mathematics.findOne({ _id: practical_Id, year: student_year })
+        else if (departmantName === 'Chemistry') {
+            try {
+                const foundItem = await Chemistry.findOne({ _id: practical_Id, year: student_year })
                 resp.render('admin/edit', {
                     id: foundItem._id,
                     department: foundItem.department,
@@ -1067,9 +1175,27 @@ app.get('/admin/:DepartmentName/:year/:practical_Id/edit', async(req, resp)=>{
                     discreption: foundItem.discreption,
                     data: foundItem.quillData,
                 })
-        } catch (err) {
-            console.log(err);
+            } catch (err) {
+                console.log(err);
+            }
         }
+        else if (departmantName === 'Mathematics') {
+            try {
+                const foundItem = await Mathematics.findOne({ _id: practical_Id, year: student_year })
+                resp.render('admin/edit', {
+                    id: foundItem._id,
+                    department: foundItem.department,
+                    year: foundItem.year,
+                    title: foundItem.title,
+                    discreption: foundItem.discreption,
+                    data: foundItem.quillData,
+                })
+            } catch (err) {
+                console.log(err);
+            }
+        }
+    } else {
+        resp.redirect('/admin-login')
     }
     
 })
@@ -1080,107 +1206,112 @@ app.get('/admin/:DepartmentName/:year/:practical_Id/edit', async(req, resp)=>{
 // UPDATE THE DATABASE WITH EDITED PRACYICAL
 //==========================================//
 app.put('/admin/update-practical', async(req, resp)=>{
-    let practical_Id = req.body.id
-    let departmantName = req.body.department
-    let student_year = req.body.year
-    let practical_title = req.body.title
-    let practical_discription = req.body.discreption
-    let practical = req.body.quillData
-    // console.log(req.body)
-    if (departmantName === 'Biotechnology'){
-        try{
-            await Biotechnogoly.findByIdAndUpdate(practical_Id, {
-                department: departmantName,
-                year: student_year,
-                title: practical_title,
-                discreption: practical_discription,
-                quillData: practical
-            })
-            console.log("******updated*******")
-            resp.sendStatus(200)
+
+    if (req.isAuthenticated()) {
+        let practical_Id = req.body.id
+        let departmantName = req.body.department
+        let student_year = req.body.year
+        let practical_title = req.body.title
+        let practical_discription = req.body.discreption
+        let practical = req.body.quillData
+        // console.log(req.body)
+        if (departmantName === 'Biotechnology') {
+            try {
+                await Biotechnogoly.findByIdAndUpdate(practical_Id, {
+                    department: departmantName,
+                    year: student_year,
+                    title: practical_title,
+                    discreption: practical_discription,
+                    quillData: practical
+                })
+                console.log("******updated*******")
+                resp.sendStatus(200)
+            }
+            catch (err) {
+                console.log(err)
+            }
         }
-        catch(err){
-            console.log(err)
+        else if (departmantName === 'Physics') {
+            try {
+                await Physics.findByIdAndUpdate(practical_Id, {
+                    department: departmantName,
+                    year: student_year,
+                    title: practical_title,
+                    discreption: practical_discription,
+                    quillData: practical
+                })
+                resp.sendStatus(200)
+            }
+            catch (err) {
+                console.log(err)
+            }
         }
-    }
-    else if (departmantName === 'Physics'){
-        try {
-            await Physics.findByIdAndUpdate(practical_Id, {
-                department: departmantName,
-                year: student_year,
-                title: practical_title,
-                discreption: practical_discription,
-                quillData: practical
-            })
-            resp.sendStatus(200)
+        else if (departmantName === 'Cybersecurity') {
+            try {
+                await Cybersecurity.findByIdAndUpdate(practical_Id, {
+                    department: departmantName,
+                    year: student_year,
+                    title: practical_title,
+                    discreption: practical_discription,
+                    quillData: practical
+                })
+                console.log("******updated*******")
+                resp.sendStatus(200)
+            }
+            catch (err) {
+                console.log(err)
+            }
         }
-        catch (err) {
-            console.log(err)
+        else if (departmantName === 'Computer-science') {
+            try {
+                await Computer_Science.findByIdAndUpdate(practical_Id, {
+                    department: departmantName,
+                    year: student_year,
+                    title: practical_title,
+                    discreption: practical_discription,
+                    quillData: practical
+                })
+                console.log("******updated*******")
+                resp.sendStatus(200)
+            }
+            catch (err) {
+                console.log(err)
+            }
         }
-    }
-    else if (departmantName === 'Cybersecurity') {
-        try {
-            await Cybersecurity.findByIdAndUpdate(practical_Id, {
-                department: departmantName,
-                year: student_year,
-                title: practical_title,
-                discreption: practical_discription,
-                quillData: practical
-            })
-            console.log("******updated*******")
-            resp.sendStatus(200)
+        else if (departmantName === 'Chemistry') {
+            try {
+                await Chemistry.findByIdAndUpdate(practical_Id, {
+                    department: departmantName,
+                    year: student_year,
+                    title: practical_title,
+                    discreption: practical_discription,
+                    quillData: practical
+                })
+                console.log("******updated*******")
+                resp.sendStatus(200)
+            }
+            catch (err) {
+                console.log(err)
+            }
         }
-        catch (err) {
-            console.log(err)
+        else if (departmantName === 'Mathematics') {
+            try {
+                await Mathematics.findByIdAndUpdate(practical_Id, {
+                    department: departmantName,
+                    year: student_year,
+                    title: practical_title,
+                    discreption: practical_discription,
+                    quillData: practical
+                })
+                console.log("******updated*******")
+                resp.sendStatus(200)
+            }
+            catch (err) {
+                console.log(err)
+            }
         }
-    }
-    else if (departmantName === 'Computer-science') {
-        try {
-            await Computer_Science.findByIdAndUpdate(practical_Id, {
-                department: departmantName,
-                year: student_year,
-                title: practical_title,
-                discreption: practical_discription,
-                quillData: practical
-            })
-            console.log("******updated*******")
-            resp.sendStatus(200)
-        }
-        catch (err) {
-            console.log(err)
-        }
-    }
-    else if (departmantName === 'Chemistry') {
-        try {
-            await Chemistry.findByIdAndUpdate(practical_Id, {
-                department: departmantName,
-                year: student_year,
-                title: practical_title,
-                discreption: practical_discription,
-                quillData: practical
-            })
-            console.log("******updated*******")
-            resp.sendStatus(200)
-        }
-        catch (err) {
-            console.log(err)
-        }
-    }
-    else if (departmantName === 'Mathematics') {
-        try {
-            await Mathematics.findByIdAndUpdate(practical_Id, {
-                department: departmantName,
-                year: student_year,
-                title: practical_title,
-                discreption: practical_discription,
-                quillData: practical
-            })
-            console.log("******updated*******")
-            resp.sendStatus(200)
-        }
-        catch (err) {
-            console.log(err)
-        }
+    } else {
+        resp.redirect('/admin-login')
     }
 
 })
@@ -1191,68 +1322,73 @@ app.put('/admin/update-practical', async(req, resp)=>{
 // DELETE PRACTICAL
 //==================//
 app.delete('/admin/:DepartmentName/:year/:practical_Id/delete', async (req, resp) => {
-    // console.log(req.params)
-    const departmantName = req.params.DepartmentName
-    const id = req.params.practical_Id
-    const year = req.params.year
+  
+    if (req.isAuthenticated()) {
+        // console.log(req.params)
+        const departmantName = req.params.DepartmentName
+        const id = req.params.practical_Id
+        const year = req.params.year
 
-    // await PracticlesSchema.find({ _id: id});
-    // resp.sendStatus(200);
-    if (departmantName === 'Biotechnology') {
-        try {
-            await Biotechnogoly.findByIdAndDelete(id);
-            resp.sendStatus(200);
-            
+        // await PracticlesSchema.find({ _id: id});
+        // resp.sendStatus(200);
+        if (departmantName === 'Biotechnology') {
+            try {
+                await Biotechnogoly.findByIdAndDelete(id);
+                resp.sendStatus(200);
+
+            }
+            catch (err) {
+                console.log(err);
+            }
         }
-        catch (err) {
-            console.log(err);
+        if (departmantName === 'Physics') {
+            try {
+                await Physics.findByIdAndDelete(id)
+                resp.sendStatus(202)
+            }
+            catch (err) {
+                console.log(err);
+            }
         }
-    } 
-    if (departmantName === 'Physics') {
-        try {
-            await Physics.findByIdAndDelete(id)
-            resp.sendStatus(202)
+        if (departmantName === 'Cybersecurity') {
+            try {
+                await Cybersecurity.findByIdAndDelete(id)
+                resp.sendStatus(202)
+            }
+            catch (err) {
+                console.log(err);
+            }
         }
-        catch (err) {
-            console.log(err);
+        if (departmantName === 'Computer-science') {
+            try {
+                await Computer_Science.findByIdAndDelete(id)
+                resp.sendStatus(202)
+            }
+            catch (err) {
+                console.log(err);
+            }
         }
-    } 
-    if (departmantName === 'Cybersecurity') {
-        try {
-            await Cybersecurity.findByIdAndDelete(id)
-            resp.sendStatus(202)
+        if (departmantName === 'Chemistry') {
+            try {
+                await Chemistry.findByIdAndDelete(id)
+                resp.sendStatus(202)
+            }
+            catch (err) {
+                console.log(err);
+            }
         }
-        catch (err) {
-            console.log(err);
-        }
-    } 
-    if (departmantName === 'Computer-science') {
-        try {
-            await Computer_Science.findByIdAndDelete(id)
-            resp.sendStatus(202)
-        }
-        catch (err) {
-            console.log(err);
-        }
-    } 
-    if (departmantName === 'Chemistry') {
-        try {
-            await Chemistry.findByIdAndDelete(id)
-            resp.sendStatus(202)
-        }
-        catch (err) {
-            console.log(err);
-        }
-    } 
-    if (departmantName === 'Mathematics') {
-        try {
-            await Mathematics.findByIdAndDelete(id)
-            resp.sendStatus(202)
-        }
-        catch (err) {
-            console.log(err);
-        }
-    } 
+        if (departmantName === 'Mathematics') {
+            try {
+                await Mathematics.findByIdAndDelete(id)
+                resp.sendStatus(202)
+            }
+            catch (err) {
+                console.log(err);
+            }
+        } 
+    } else {
+        resp.redirect('/admin-login')
+    }
 
 })
 
