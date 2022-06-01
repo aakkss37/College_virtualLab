@@ -190,7 +190,6 @@ body {
 }
 
 #formContainer{
-        /* border: solid red 2px; */
         width:fit-content;
         margin: auto;
         text-align: left;
@@ -219,7 +218,6 @@ body {
 
 
 .ql-toolbar {
-        /* background-color: #cadbc2; */
         max-width: 1300px;
         margin: auto;
 }
@@ -249,7 +247,6 @@ body {
         max-width: 1300px;
         margin: auto;
         border: dashed #367D43 2px;
-        /* background-color: #cadbc2; */
         margin-top: 5px;
         margin-bottom: 5px;
 }
@@ -265,8 +262,3 @@ footer {
         display: flex;
         justify-content: center;
 }
-
-/* .footer p{
-  display: inline;
-  align-content: center;
-} */

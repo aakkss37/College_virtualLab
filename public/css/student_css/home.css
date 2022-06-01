@@ -1,22 +1,15 @@
 
-/* .section3 div{
-    border: solid red 3px; margin: 2px; padding: 2px;
-} */
 
-        /* ********SECTION 1******* */
-        /* ********SECTION 1******* */
-        /* ********SECTION 1******* */
+
         /* ********SECTION 1******* */
 
 
 #section1{
-    /* border: solid red 3px; padding: 2px; */
     background-color: #cadbc2;
     position: relative;
     bottom: 1px;
 }
 #section1_container {
-    /* border: solid red 3px; margin: 2px; padding: 2px; */
     display: flex;
     flex-direction: row;
     flex-wrap: wrap-reverse;
@@ -26,7 +19,6 @@
 }
 
 .tagLine {
-    /* border: solid red 3px; margin: 2px; padding: 2px; */
     display: block;
     flex-grow: 0;
     flex-shrink: 1;
@@ -42,7 +34,6 @@
 }
 
 .tagLineImg {
-    /* border: solid red 3px; margin: 2px; padding: 2px; */
     display: block;
     flex-grow: 0;
     flex-shrink: 5;
@@ -99,11 +90,6 @@
 }
 
 
-
-        /* ********SECTION 2******* */
-        /* ********SECTION 2******* */
-        /* ********SECTION 2******* */
-        /* ********SECTION 2******* */
         /* ********SECTION 2******* */
 .section2_container {
   display: flex;
@@ -184,11 +170,6 @@
 
 
 
-
-        /* ********SECTION 3******* */
-        /* ********SECTION 3******* */
-        /* ********SECTION 3******* */
-        /* ********SECTION 3******* */
         /* ********SECTION 3******* */
 .section3{
     background-color: #cadbc2;

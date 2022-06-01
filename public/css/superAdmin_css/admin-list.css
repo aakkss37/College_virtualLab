@@ -42,7 +42,6 @@
          border-color: #367D43;
          border-style: solid;
          padding: 3px;
-         /* font-size: 1.5rem; */
  }
 
  table.GeneratedTable thead {
@@ -55,7 +54,6 @@
 .adminDetails:hover {
         cursor: pointer;
         background-color: #cadbc2;
-        /* color: red; */
 }
 
  @media (max-width: 512px) {

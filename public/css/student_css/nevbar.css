@@ -182,9 +182,6 @@ body {
 
 
 
-
-
-
 /* ****footer***** */
 footer{
   background-color: #367D43;
@@ -192,7 +189,3 @@ footer{
   display: flex;
   justify-content: center;
 }
-/* .footer p{
-  display: inline;
-  align-content: center;
-} */

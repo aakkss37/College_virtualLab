@@ -11,7 +11,6 @@
   align-items: stretch;
   justify-content: space-between;
   min-height: 800px;
-  /* box-shadow: 0 0 20px 6px #090b6f85; */
 }
 @media (max-width: 980px) {
   .box-form {
@@ -35,7 +34,6 @@
   padding: 30px;
   width: 100%;
   height: 100%;
-  /* background: #5961f9ad; */
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -123,32 +121,6 @@
   cursor: pointer;
 }
 
-/* label {
-  display: block;
-  position: relative;
-  margin-left: 30px;
-} */
-
-/* label::before {
-  content: ' \f00c';
-  position: absolute;
-  font-family: FontAwesome;
-  background: transparent;
-  border: 3px solid #367D43;
-  border-radius: 4px;
-  color: transparent;
-  left: -30px;
-  transition: all 0.2s linear;
-} */
-
-/* label:hover::before {
-  font-family: FontAwesome;
-  content: ' \f00c';
-  color: #fff;
-  cursor: pointer;
-  background: #367D43;
-} */
-
 label:hover::before .text-checkbox {
   background: #367D43;
 }
@@ -160,7 +132,3 @@ label span.text-checkbox {
   cursor: pointer;
   transition: all 0.2s linear;
 }
-
-/* label input[type="checkbox"] {
-  display: none;
-} */

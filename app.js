@@ -463,24 +463,19 @@ app.post('/super-admin/login', async (req, resp) => {
     try {     
         const foundUser = await Admin.findOne({ username: req.body.username })
         console.log(foundUser)
-        // console.log('1')
         if (foundUser && foundUser.isSuperAdmin) {
             const superUser = new Admin({
                 username: req.body.username,
                 password: req.body.password
             })
-            // console.log('2')
             req.logIn(superUser, (err) => {
                 if (err) console.log(err)
                 else {
                     passport.authenticate('local')(req, resp, () => {
-                        // console.log('3')
                         if (req.isAuthenticated()) {
-                            // console.log('4')
                             resp.redirect('/super-admin/admin-list') 
                             console.log('Login sucessful')
                         } else {    
-                            // console.log('5') 
                             alert('wrong user-ID or password')
                             resp.redirect('/super-admin/login')
                         }
@@ -488,12 +483,10 @@ app.post('/super-admin/login', async (req, resp) => {
                 }
             })
         } else if (foundUser  &&  !foundUser.isSuperAdmin){
-            // console.log('6')
             alert('Unauthorized Request')
             resp.redirect('/super-admin/login')
         }
         else{
-            // console.log('7')
             alert('wrong user-ID or password')
             resp.redirect('/super-admin/login')
         }
@@ -526,7 +519,7 @@ app.get('/super-admin/logout', async (req, resp) => {
 //========================//
 app.get('/super-admin/create-admin', (req, resp) => {
 
-    // 62925cc6d73c40339c0c4ea7
+
 
     if (req.isAuthenticated()) {
         if (req.user._id == '62925cc6d73c40339c0c4ea7') {
@@ -551,7 +544,7 @@ app.post('/super-admin/create-admin', async (req, resp) => {
             if (req.user._id == '62925cc6d73c40339c0c4ea7') {
                 const foundUser = await Admin.find({ username: req.body.username })
                 if (foundUser.length) {
-                    // console.log('User name already exist.')
+
                     alert('User name already exist.')
                     resp.redirect('/super-admin/create-admin')
                     console.log(foundUser)
@@ -628,7 +621,7 @@ app.delete('/super-admin/admin/:admin_username/:admin_id/delete', async (req, re
     if (req.isAuthenticated()) {
         if (req.user._id == '62925cc6d73c40339c0c4ea7') { 
             try {
-                // const adminUsername = req.params.admin_username;
+
                 const adminId = req.params.admin_id
                 await Admin.findByIdAndDelete(adminId, (err, doc) => {
                     if (err) {
@@ -679,7 +672,7 @@ app.get('/admin-login', (req, resp) => {
 // AUTHANTICATE ADMIN LOGIN //
 //==========================//
 app.post('/admin-login', (req, resp) => {
-    // console.log('post request recieved')
+
     const user = new Admin({
         username: req.body.username,
         password: req.body.password
@@ -866,7 +859,6 @@ app.post('/admin/compose', async (req, resp) => {
         resp.redirect('/admin-login')
     }
 
-    // resp.redirect('/client/departmentlab')
 })
 
 
@@ -1265,7 +1257,6 @@ app.get('/admin/:DepartmentName/:year/:practical_Id/edit', async (req, resp) => 
 
 
         if (departmantName === 'Biotechnology') {
-            // console.log('department is : Biotechnology')
             try {
                 const foundItem = await Biotechnogoly.findOne({ _id: practical_Id, year: student_year })
                 resp.render('admin/edit', {
@@ -1376,7 +1367,6 @@ app.put('/admin/update-practical', async (req, resp) => {
         let practical_title = req.body.title
         let practical_discription = req.body.discreption
         let practical = req.body.quillData
-        // console.log(req.body)
         if (departmantName === 'Biotechnology') {
             try {
                 await Biotechnogoly.findByIdAndUpdate(practical_Id, {
@@ -1487,13 +1477,12 @@ app.put('/admin/update-practical', async (req, resp) => {
 app.delete('/admin/:DepartmentName/:year/:practical_Id/delete', async (req, resp) => {
 
     if (req.isAuthenticated()) {
-        // console.log(req.params)
+
         const departmantName = req.params.DepartmentName
         const id = req.params.practical_Id
         const year = req.params.year
 
-        // await PracticlesSchema.find({ _id: id});
-        // resp.sendStatus(200);
+
         if (departmantName === 'Biotechnology') {
             try {
                 await Biotechnogoly.findByIdAndDelete(id);
