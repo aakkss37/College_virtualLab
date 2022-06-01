@@ -19,6 +19,7 @@ app.use(session({
     secret: 'This_is_a_little_secret_of_karpagam_academy_of_higher_education',
     resave: false,
     saveUninitialized: false,
+
 }))
 app.use(passport.initialize());
 app.use(passport.session());
@@ -139,6 +140,7 @@ app.get('/home/virtual-lab/biotechnology/:year', async (req, resp) => {
     }
 
 })
+
 app.get('/home/virtual-lab/physics/:year', async (req, resp) => {
 
     const year = req.params.year
@@ -181,6 +183,7 @@ app.get('/home/virtual-lab/physics/:year', async (req, resp) => {
     }
 
 })
+
 app.get('/home/virtual-lab/mathematics/:year', async (req, resp) => {
 
     const year = req.params.year
@@ -223,6 +226,7 @@ app.get('/home/virtual-lab/mathematics/:year', async (req, resp) => {
     }
 
 })
+
 app.get('/home/virtual-lab/cybersecurity/:year', async (req, resp) => {
 
     const year = req.params.year
@@ -265,6 +269,7 @@ app.get('/home/virtual-lab/cybersecurity/:year', async (req, resp) => {
     }
 
 })
+
 app.get('/home/virtual-lab/computer-science/:year', async (req, resp) => {
 
     const year = req.params.year
@@ -308,6 +313,7 @@ app.get('/home/virtual-lab/computer-science/:year', async (req, resp) => {
     }
 
 })
+
 app.get('/home/virtual-lab/chemistry/:year', async (req, resp) => {
 
     const year = req.params.year
@@ -453,32 +459,42 @@ app.get('/super-admin/login', (req, resp) => {
     resp.render('superAdmin/super-admin-login')
 })
 app.post('/super-admin/login', async (req, resp) => {
-    try {
-        
+
+    try {     
         const foundUser = await Admin.findOne({ username: req.body.username })
-        // console.log(foundUser.username)
-        if (foundUser.isSuperAdmin) {
+        console.log(foundUser)
+        // console.log('1')
+        if (foundUser && foundUser.isSuperAdmin) {
             const superUser = new Admin({
                 username: req.body.username,
                 password: req.body.password
             })
+            // console.log('2')
             req.logIn(superUser, (err) => {
                 if (err) console.log(err)
                 else {
                     passport.authenticate('local')(req, resp, () => {
-                        // console.log('working inside')
+                        // console.log('3')
                         if (req.isAuthenticated()) {
-                            resp.redirect('/super-admin/admin-list')
+                            // console.log('4')
+                            resp.redirect('/super-admin/admin-list') 
                             console.log('Login sucessful')
-                        } else {                            
+                        } else {    
+                            // console.log('5') 
                             alert('wrong user-ID or password')
                             resp.redirect('/super-admin/login')
                         }
                     });
                 }
             })
-        }else{
+        } else if (foundUser  &&  !foundUser.isSuperAdmin){
+            // console.log('6')
             alert('Unauthorized Request')
+            resp.redirect('/super-admin/login')
+        }
+        else{
+            // console.log('7')
+            alert('wrong user-ID or password')
             resp.redirect('/super-admin/login')
         }
     } catch (error) {
@@ -486,6 +502,10 @@ app.post('/super-admin/login', async (req, resp) => {
     }
 
 })
+
+
+
+
 //====================//
 // SUPER ADMIN LOGOUT //
 //====================//
@@ -495,88 +515,144 @@ app.get('/super-admin/logout', async (req, resp) => {
             if (err) return next(err);
             console.log('Logout sucessfull')
             alert('Logut sucessfully')
-            resp.sendStatus(200)
         });
     } catch (error) {
         console.log(error)
     }
 })
+
 //========================//
 // NEW ADMIN REGISTRATION //
 //========================//
 app.get('/super-admin/create-admin', (req, resp) => {
-    resp.render('superAdmin/new-admin')
-})
-app.post('/super-admin/create-admin', async (req, resp) => {
-    console.log('working', req.body.username)
-    try {
-        const foundUser = await Admin.find({ username: req.body.username })
-        if (foundUser.length) {
-            console.log('User name already exist.')
-            alert('User name already exist.')
-            resp.redirect('/super-admin/create-admin')
-            console.log(foundUser)
+
+    // 62925cc6d73c40339c0c4ea7
+
+    if (req.isAuthenticated()) {
+        if (req.user._id == '62925cc6d73c40339c0c4ea7') {
+            resp.render('superAdmin/new-admin')
         }
-        else {
-            Admin.register({
-                username: req.body.username,
-                name: req.body.facultyName,
-                department: req.body.department,
-                isAdmin: true,
-                isSuperAdmin: false
-            }, req.body.password, (err, user) => {
-                if (err) {
-                    console.log(err)
-                    resp.sendStatus(400)
+        else{
+            alert('Unauthorized')
+            resp.redirect('/super-admin/login')
+        }
+    }
+    else {
+        alert('Please Login')
+        resp.redirect('/super-admin/login')
+    }
+
+})
+
+app.post('/super-admin/create-admin', async (req, resp) => {
+
+    if (req.isAuthenticated()) {
+        try {
+            if (req.user._id == '62925cc6d73c40339c0c4ea7') {
+                const foundUser = await Admin.find({ username: req.body.username })
+                if (foundUser.length) {
+                    // console.log('User name already exist.')
+                    alert('User name already exist.')
                     resp.redirect('/super-admin/create-admin')
+                    console.log(foundUser)
                 }
-                else {
-                    passport.authenticate('local')(req, resp, () => {
-                        console.log('new user registered \n', user)
-                        resp.redirect('/super-admin/admin-list')
+                else { 
+                    Admin.register({
+                        username: req.body.username,
+                        name: req.body.facultyName,
+                        department: req.body.department,
+                        isAdmin: true,
+                        isSuperAdmin: false
+                    }, req.body.password, (err, user) => {
+                        if (err) {
+                            console.log(err)
+                            resp.redirect('/super-admin/create-admin')
+                        }
+                        else {
+                            passport.authenticate('local')(req, resp, () => {
+                                console.log('new user registered \n', user)
+                                resp.redirect('/super-admin/admin-list')
+                            })
+                        }
                     })
                 }
-            })
+            }
+            else {
+                alert('Unauthorized')
+                resp.redirect('/super-admin/login')
+            }
+        } catch (error) {
+            console.log(error)
         }
+            
+            
     }
-    catch (err) {
-        console.log(err)
+    else {
+        alert('Please Login')
+        resp.redirect('/super-admin/login')
     }
+    
 })
 
 
 app.get('/super-admin/admin-list', async (req, resp) => {
 
-    try {
-        const allAdmin = await Admin.find()
-        resp.render('superAdmin/admin-list', {
-            foundItems: allAdmin
-        });
-    } catch (error) {
-        console.log(error)
+    if (req.isAuthenticated()) {
+        if (req.user._id == '62925cc6d73c40339c0c4ea7') {        
+            try {
+                const allAdmin = await Admin.find()
+                resp.render('superAdmin/admin-list', {
+                    foundItems: allAdmin
+                });
+            } catch (error) {
+                console.log(error)
+            }
+        }
+        else{
+            alert('Please Login')
+            resp.redirect('/super-admin/login')
+        }
     }
+    else {
+        alert('Please Login')
+        resp.redirect('/super-admin/login')
+    }
+    
 })
+
+
 //==============//
 // ADMIN DELETE //
 //==============//
 app.delete('/super-admin/admin/:admin_username/:admin_id/delete', async (req, resp) => {
-    try {
-        // const adminUsername = req.params.admin_username;
-        const adminId = req.params.admin_id
-        await Admin.findByIdAndDelete(adminId, (err, doc) => {
-            if (err) {
-                console.log(err)
-            }
-            else {
-                console.log(doc, 'deleted')
-                alert('Deleted Sucessfully')
-                resp.sendStatus(200);
-            }
-        })
+    if (req.isAuthenticated()) {
+        if (req.user._id == '62925cc6d73c40339c0c4ea7') { 
+            try {
+                // const adminUsername = req.params.admin_username;
+                const adminId = req.params.admin_id
+                await Admin.findByIdAndDelete(adminId, (err, doc) => {
+                    if (err) {
+                        console.log(err)
+                    }
+                    else {
+                        console.log(doc, 'deleted')
+                        alert('Deleted Sucessfully')
+                    }
+                })
 
 
-    } catch (error) {
-        console.log(error)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+        else {
+            alert('Please Login')
+            resp.redirect('/super-admin/login')
+        }
+    }
+    else {
+        alert('Please Login')
+        resp.redirect('/super-admin/login')
     }
 
 })
@@ -626,13 +702,6 @@ app.post('/admin-login', (req, resp) => {
     })
 })
 
-// app.post("/admin-login", passport.authenticate('local', {
-//     successRedirect: "/admin/compose",
-//     failureRedirect: "/admin-login",
-//     failureFlash: true
-// }), (req, res)=>{
-
-// })
 
 //==============//
 // ADMIN LOGOUT //
